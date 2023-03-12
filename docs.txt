@@ -1,0 +1,10 @@
+step 1
+node -v > .nvmrc
+will generate .nvmrc file with current node version on my machine
+
+step 2
+.gitignore
+
+step 3
+npx tsc --init
+will generate tsconfig file
