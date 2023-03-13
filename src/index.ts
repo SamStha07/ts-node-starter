@@ -1,17 +1,24 @@
 import 'module-alias/register';
-import express, { Request, Response } from 'express';
-import add from '@math/math';
 
-const app = express();
+import app from '@lib/app';
 
-console.log(add(5, 90));
-
-app.get('/', (req: Request, res: Response) => {
-  res.send('hello from server asdasdas');
+process.on('uncaughtException', err => {
+  console.log('UNCAUGHT EXCEPTION!, SHUTTING DOWN....');
+  console.log(err.name, err.message);
+  process.exit(1);
 });
 
-const port = 8000;
+const PORT = 8000;
 
-app.listen(port, () => {
-  console.log(`listening on port ${port}`);
+const server = app.listen(PORT, () => {
+  console.log(`Express server listening on port ${PORT}`);
+});
+
+// this will handle all errors coming from mongodb
+process.on('unhandledRejection', (err: Error) => {
+  console.log('UNHANDLED REJECTION!, SHUTTING DOWN....');
+  console.log(err.name, err.message);
+  server.close(() => {
+    process.exit(1);
+  });
 });
