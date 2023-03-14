@@ -1,27 +1,136 @@
-import { Request, Response } from 'express';
+/* eslint-disable consistent-return */
+import bcrypt from 'bcryptjs';
+import { NextFunction, Request, Response } from 'express';
+import { RowDataPacket } from 'mysql2';
+import jwt from 'jsonwebtoken';
+import db from '@lib/db';
+import AppError from '@utils/appError';
 import successResponse from '@utils/sucessResponse';
 
-// interface User {
-//   id: string;
-//   name: string;
-//   email: string;
-//   role: 'admin' | 'customer' | 'vendor';
-// }
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  created_at: Date;
+}
 
-// const signToken = id => {
-//   return jwt.sign({ id }, process.env.JWT_SECRET, {
-//     expiresIn: process.env.JWT_EXPIRES_IN,
-//   });
-// };
+export interface IUser extends RowDataPacket {
+  id?: number;
+  name: string;
+  email: string;
+  password?: string;
+  created_at: Date;
+}
 
-export const createUser = (req: Request, res: Response) => {
+export const createUser = (req: Request, res: Response, next: NextFunction) => {
   const { name, email, password } = req.body;
 
-  console.log('register', { name, email, password });
+  db.query(
+    `SELECT * FROM users WHERE LOWER(email) = LOWER(${db.escape(email)});`,
+    (err, result: IUser) => {
+      if (err) {
+        return next(err);
+      }
 
-  return successResponse({
-    res,
-    statusCode: 200,
-    data: [],
+      if (result.length) {
+        return next(new AppError('Email is already in use!', 409));
+      }
+
+      bcrypt.hash(password, 10, (err, hash) => {
+        if (err) {
+          return next(err);
+        }
+        db.query(
+          `INSERT INTO users (name, email, password) VALUES ('${name}', ${db.escape(
+            email
+          )}, ${db.escape(hash)})`,
+          err => {
+            if (err) {
+              return next(err);
+            }
+            return successResponse({
+              res,
+              statusCode: 201,
+              msg: 'User has been registered successfully!',
+            });
+          }
+        );
+      });
+    }
+  );
+};
+
+export const loginUser = (req: Request, res: Response, next: NextFunction) => {
+  const { email, password } = req.body;
+
+  db.query(
+    `SELECT * FROM users WHERE LOWER(email) = LOWER(${db.escape(email)});`,
+    (err, result: IUser) => {
+      if (err) {
+        return next(err);
+      }
+
+      if (!result.length) {
+        return next(new AppError('Email or password is incorrect', 401));
+      }
+
+      bcrypt.compare(password, result[0].password, (err, success) => {
+        if (err) {
+          return next(err);
+        }
+
+        if (success) {
+          const token = jwt.sign(
+            {
+              id: result[0].id,
+            },
+            process.env.JWT_SECRET as string,
+            {
+              expiresIn: process.env.JWT_EXPIRES_IN,
+            }
+          );
+
+          res.cookie('authCookie', token, {
+            maxAge: 900000,
+            secure: process.env.NODE_ENV === 'production',
+            httpOnly: true,
+          });
+
+          return successResponse({
+            res,
+            statusCode: 201,
+            msg: 'User logged in successfully!',
+          });
+        }
+      });
+    }
+  );
+};
+
+export const getAllUsers = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  db.query(`SELECT * FROM users;`, async (err, result: IUser) => {
+    if (err) {
+      return next(err);
+    }
+
+    if (!result.length) {
+      return next(new AppError('Email or password is incorrect', 401));
+    }
+
+    const arr: User[] = [];
+    await result.map((res: User) =>
+      arr.push({
+        id: res.id,
+        name: res.name,
+        email: res.email,
+        created_at: res.created_at,
+      })
+    );
+
+    return successResponse({ res, data: arr, statusCode: 200 });
   });
 };

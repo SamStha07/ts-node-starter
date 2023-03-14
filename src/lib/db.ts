@@ -5,6 +5,7 @@ const db = mysql.createConnection({
   user: 'root',
   password: '*BzL23%SF6kk',
   database: 'ig_clone',
+  // database: 'portfolio',
 });
 
 db.connect(err => {

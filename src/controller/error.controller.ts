@@ -2,7 +2,7 @@ import { Response, Request } from 'express';
 import { CustomError } from '@type/customError';
 import AppError from '@utils/appError';
 
-const sendErrorDev = (err: CustomError, res: Response) =>
+export const sendErrorDev = (err: CustomError, res: Response) =>
   res.status(err.statusCode).json({
     status: err.status,
     error: err,

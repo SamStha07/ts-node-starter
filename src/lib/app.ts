@@ -6,6 +6,7 @@ import { rateLimit } from 'express-rate-limit';
 import helmet from 'helmet';
 import hpp from 'hpp';
 import morgan from 'morgan';
+import cookieParser from 'cookie-parser';
 import xss from 'xss-clean';
 import HttpStatusCodes from '@utils/httpStatusCode';
 import AppError from '@utils/appError';
@@ -22,6 +23,8 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 // parse application/json
 app.use(bodyParser.json());
+
+app.use(cookieParser());
 
 // Set security HTTP headers
 app.use(helmet());
@@ -82,7 +85,7 @@ app.use('/api/user', userRouter);
 // middleware for unknown route to show error for all HTTPHeaders
 // Global error handling Middleware
 app.all('*', (req: Request, _: Response, next: NextFunction) => {
-  next(
+  return next(
     new AppError(
       `Can't find ${req.originalUrl} on this server!`,
       HttpStatusCodes.NOT_FOUND
