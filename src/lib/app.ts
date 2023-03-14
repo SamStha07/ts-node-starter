@@ -18,6 +18,8 @@ const app = express();
 
 dotenv.config();
 
+app.use(cors());
+
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }));
 
@@ -28,8 +30,6 @@ app.use(cookieParser());
 
 // Set security HTTP headers
 app.use(helmet());
-
-app.use(cors());
 
 // middleware betn req and res
 // Development loading
@@ -48,6 +48,9 @@ const limiter = rateLimit({
 
 // only limits for api requests only
 app.use('/api', limiter);
+
+// Body parser, reading data from body into req.body
+app.use(express.json({ limit: '10kb' }));
 
 // Data sanization against XSS
 app.use(xss());

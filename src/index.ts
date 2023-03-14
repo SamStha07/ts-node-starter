@@ -1,5 +1,4 @@
 import 'module-alias/register';
-
 import app from '@lib/app';
 
 process.on('uncaughtException', err => {

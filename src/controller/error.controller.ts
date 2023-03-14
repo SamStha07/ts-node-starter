@@ -1,6 +1,5 @@
 import { Response, Request } from 'express';
 import { CustomError } from '@type/customError';
-import AppError from '@utils/appError';
 
 export const sendErrorDev = (err: CustomError, res: Response) =>
   res.status(err.statusCode).json({
@@ -30,10 +29,10 @@ const sendErrorProd = (err: CustomError, res: Response) => {
   });
 };
 
-const handleCastErrorDB = (error: CustomError) => {
-  const message = `Invalid ${error.path}: ${error.value}.`;
-  return new AppError(message, 400);
-};
+// const handleCastErrorDB = (error: CustomError) => {
+//   const message = `Invalid ${error.path}: ${error.value}.`;
+//   return new AppError(message, 400);
+// };
 
 // const handleDuplicateFieldDB = (error) => {
 //   const message = `Duplicate field value ${error.keyValue.name}: Please use another key value`;
@@ -53,12 +52,12 @@ const globalErrorHandler = (err: CustomError, req: Request, res: Response) => {
     sendErrorDev(err, res);
   }
   // Production part isnot running
-  else if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === 'production') {
     // error showing to the client using mongoose DB error
-    let error = {
-      ...err,
-    };
-    if (error.name === 'CastError') error = handleCastErrorDB(error); // this line willnot run because there isnot error.name in the error
+    // let error = {
+    //   ...err,
+    // };
+    // if (error.name === 'CastError') error = handleCastErrorDB(error); // this line willnot run because there isnot error.name in the error
 
     // Duplicate database fields
     // if (error.code === 11000) error = handleDuplicateFieldDB(error);
@@ -66,7 +65,7 @@ const globalErrorHandler = (err: CustomError, req: Request, res: Response) => {
     // if (error.name === 'ValidationError')
     //   error = handleValidationErrorDB(error);
 
-    sendErrorProd(error, res);
+    sendErrorProd(err, res);
   }
 };
 

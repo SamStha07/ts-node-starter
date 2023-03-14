@@ -4,8 +4,8 @@ const db = mysql.createConnection({
   host: '127.0.0.1',
   user: 'root',
   password: '*BzL23%SF6kk',
-  database: 'ig_clone',
-  // database: 'portfolio',
+  // database: 'ig_clone',
+  database: 'portfolio',
 });
 
 db.connect(err => {
