@@ -16,9 +16,9 @@
   "scripts": {
     "build": "rimraf dist && npx tsc",
     "prestart": "npm run build",
-    "start": "node dist/src/index.js",
+    "start": "NODE_ENV=production node dist/src/index.js",
     "preserve": "npm run build",
-    "serve": "concurrently \"npx tsc -w\"  \"nodemon dist/src/index.js\""
+    "serve": "NODE_ENV=development concurrently \"npx tsc -w\"  \"nodemon dist/src/index.js\""
   },
   "keywords": [],
   "author": "",

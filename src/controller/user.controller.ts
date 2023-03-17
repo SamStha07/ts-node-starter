@@ -78,6 +78,9 @@ export const loginUser = (req: Request, res: Response, next: NextFunction) => {
         if (err) {
           return next(err);
         }
+        if (!success) {
+          return next(new AppError('Email or password is incorrect', 401));
+        }
 
         if (success) {
           const token = jwt.sign(
@@ -98,7 +101,7 @@ export const loginUser = (req: Request, res: Response, next: NextFunction) => {
 
           return successResponse({
             res,
-            statusCode: 201,
+            statusCode: 200,
             msg: 'User logged in successfully!',
           });
         }

@@ -13,6 +13,7 @@ import AppError from '@utils/appError';
 import userRouter from '@routes/user.route';
 import commentRouter from '@routes/comment.route';
 import globalErrorHandler from '@controller/error.controller';
+import { CustomError } from '@type/customError';
 
 const app = express();
 
@@ -85,6 +86,8 @@ app.get('/', (_: Request, res: Response) => {
 app.use('/api/comments', commentRouter);
 app.use('/api/user', userRouter);
 
+console.log('node_env', process.env.NODE_ENV);
+
 // middleware for unknown route to show error for all HTTPHeaders
 // Global error handling Middleware
 app.all('*', (req: Request, _: Response, next: NextFunction) => {
@@ -95,6 +98,11 @@ app.all('*', (req: Request, _: Response, next: NextFunction) => {
     )
   );
 });
-app.use(globalErrorHandler);
+
+app.use((err: CustomError, req: Request, res: Response, next: NextFunction) => {
+  // inorder to show the errors in json format we have to set header as below
+  res.setHeader('Content-Type', 'application/json');
+  globalErrorHandler(err, req, res, next);
+});
 
 export default app;
