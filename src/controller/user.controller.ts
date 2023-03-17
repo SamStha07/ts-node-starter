@@ -1,26 +1,11 @@
 /* eslint-disable consistent-return */
 import bcrypt from 'bcryptjs';
 import { NextFunction, Request, Response } from 'express';
-import { RowDataPacket } from 'mysql2';
 import jwt from 'jsonwebtoken';
 import db from '@lib/db';
 import AppError from '@utils/appError';
 import successResponse from '@utils/sucessResponse';
-
-export interface User {
-  id: number;
-  name: string;
-  email: string;
-  created_at: Date;
-}
-
-export interface IUser extends RowDataPacket {
-  id?: number;
-  name: string;
-  email: string;
-  password?: string;
-  created_at: Date;
-}
+import { IUser, User } from '@type/user.types';
 
 export const createUser = (req: Request, res: Response, next: NextFunction) => {
   const { name, email, password } = req.body;

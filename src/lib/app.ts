@@ -1,4 +1,5 @@
 import bodyParser from 'body-parser';
+import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express, { NextFunction, Request, Response } from 'express';
@@ -6,14 +7,13 @@ import { rateLimit } from 'express-rate-limit';
 import helmet from 'helmet';
 import hpp from 'hpp';
 import morgan from 'morgan';
-import cookieParser from 'cookie-parser';
 import xss from 'xss-clean';
 import HttpStatusCodes from '@utils/httpStatusCode';
 import AppError from '@utils/appError';
-import userRouter from '@routes/user.route';
-import commentRouter from '@routes/comment.route';
-import globalErrorHandler from '@controller/error.controller';
 import { CustomError } from '@type/customError';
+import userRouter from '@routes/user.route';
+import projectRouter from '@routes/projet.route';
+import globalErrorHandler from '@controller/error.controller';
 
 const app = express();
 
@@ -83,8 +83,8 @@ app.get('/', (_: Request, res: Response) => {
 });
 
 // routes
-app.use('/api/comments', commentRouter);
 app.use('/api/user', userRouter);
+app.use('/api/projects', projectRouter);
 
 console.log('node_env', process.env.NODE_ENV);
 

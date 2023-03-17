@@ -44,7 +44,7 @@ const globalErrorHandler = (
   if (process.env.NODE_ENV === 'development') {
     sendErrorDev(err, res);
   }
-  // Production part isnot running
+
   if (process.env.NODE_ENV === 'production') {
     sendErrorProd(err, res);
   }
