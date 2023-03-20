@@ -79,7 +79,7 @@ export const loginUser = (req: Request, res: Response, next: NextFunction) => {
           );
 
           res.cookie('authCookie', token, {
-            maxAge: 900000,
+            maxAge: 1000 * 60 * 60 * 24, // 1hr=36,00,000, 24hr=1hr*24
             secure: process.env.NODE_ENV === 'production',
             httpOnly: true,
           });

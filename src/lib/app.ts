@@ -8,12 +8,14 @@ import helmet from 'helmet';
 import hpp from 'hpp';
 import morgan from 'morgan';
 import xss from 'xss-clean';
+import fileUpload from 'express-fileupload';
 import HttpStatusCodes from '@utils/httpStatusCode';
 import AppError from '@utils/appError';
 import { CustomError } from '@type/customError';
 import userRouter from '@routes/user.route';
 import projectRouter from '@routes/projet.route';
 import globalErrorHandler from '@controller/error.controller';
+import technologyRouter from '@routes/technology.route';
 
 const app = express();
 
@@ -21,13 +23,20 @@ dotenv.config();
 
 app.use(cors());
 
-// parse application/x-www-form-urlencoded
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(cookieParser());
 
 // parse application/json
 app.use(bodyParser.json());
 
-app.use(cookieParser());
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: true }));
+
+app.use(
+  fileUpload({
+    useTempFiles: true,
+    limits: { fileSize: 50 * 2024 * 1024 },
+  })
+);
 
 // Set security HTTP headers
 app.use(helmet());
@@ -37,6 +46,8 @@ app.use(helmet());
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
+
+app.use('/uploads', express.static('uploads'));
 
 // to make Node app more secure
 // limits the request made while requesting data in same API
@@ -85,8 +96,7 @@ app.get('/', (_: Request, res: Response) => {
 // routes
 app.use('/api/user', userRouter);
 app.use('/api/projects', projectRouter);
-
-console.log('node_env', process.env.NODE_ENV);
+app.use('/api/technology', technologyRouter);
 
 // middleware for unknown route to show error for all HTTPHeaders
 // Global error handling Middleware

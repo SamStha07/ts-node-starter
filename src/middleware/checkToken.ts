@@ -12,7 +12,7 @@ interface CustomPayload extends JwtPayload {
 export const checkToken = (req: Request, _: Response, next: NextFunction) => {
   const authcookie = req.cookies.authCookie;
 
-  console.log('authcookie', authcookie);
+  // console.log('authcookie', authcookie);
 
   if (!authcookie) {
     return next(
