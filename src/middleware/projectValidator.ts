@@ -1,16 +1,8 @@
-/* eslint-disable camelcase */
 /* eslint-disable consistent-return */
 import { NextFunction, Response, Request } from 'express';
 import { UploadedFile } from 'express-fileupload';
 import { AnyZodObject, z } from 'zod';
-
-const MAX_FILE_SIZE = 500000; // 5MB
-const ACCEPTED_IMAGE_TYPES = [
-  'image/jpeg',
-  'image/jpg',
-  'image/png',
-  'image/webp',
-];
+import { ACCEPTED_IMAGE_TYPES, MAX_FILE_SIZE } from '@utils/image-size-types';
 
 const dataSchema = z.object({
   name: z.string({

@@ -23,6 +23,7 @@ module.exports = {
     'prettier/prettier': 'error',
     'import/extensions': 'off',
     'import/no-unresolved': 'off',
+    camelcase: 'off',
     'no-console': 'off',
     'no-shadow': 'off',
     'no-param-reassign': 'off',
