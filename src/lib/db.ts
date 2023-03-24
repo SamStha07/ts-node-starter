@@ -1,20 +1,16 @@
 import mysql from 'mysql2';
 
-// const db = mysql.createConnection({
-//   host: '127.0.0.1',
-//   user: 'root',
-//   password: '*BzL23%SF6kk',
-//   database: 'portfolio',
-// });
-// const db = mysql.createConnection({
-//   host: 'containers-us-west-145.railway.app',
-//   user: 'root',
-//   password: 'YFAzGUGToqiW3XvgtAia',
-//   database: 'railway',
-// });
-const db = mysql.createConnection(
-  'mysql://root:YFAzGUGToqiW3XvgtAia@containers-us-west-145.railway.app:7734/railway'
-);
+const db = mysql.createConnection({
+  host: process.env.MYSQL_HOST || '127.0.0.1',
+  user: process.env.MYSQL_USER || 'root',
+  password: process.env.MYSQL_PASSWORD || '*BzL23%SF6kk',
+  database: process.env.MYSQL_DATABASE || 'portfolio',
+  port: (process.env.MYSQL_PORT as unknown as number) || 3306,
+});
+
+// const db = mysql.createConnection(
+//   'mysql://root:YFAzGUGToqiW3XvgtAia@containers-us-west-145.railway.app:7734/railway'
+// );
 
 db.connect(err => {
   if (err) {
