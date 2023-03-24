@@ -6,8 +6,8 @@ CREATE TABLE
         user_id INTEGER NOT NULL,
         project_tech_id INTEGER NOT NULL,
         created_at TIMESTAMP DEFAULT NOW(),
-        FOREIGN KEY(user_id) REFERENCES users(id) ON UPDATE CASCADE ON DELETE CASCADE,
-        FOREIGN KEY(project_tech_id) REFERENCES project_tech(id) ON UPDATE CASCADE ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON UPDATE CASCADE ON DELETE CASCADE,
+        FOREIGN KEY (project_tech_id) REFERENCES project_tech(id) ON UPDATE CASCADE ON DELETE CASCADE,
     );
 
 ALTER TABLE projects

@@ -13,7 +13,7 @@ import HttpStatusCodes from '@utils/httpStatusCode';
 import AppError from '@utils/appError';
 import { CustomError } from '@type/customError';
 import userRouter from '@routes/user.route';
-import projectRouter from '@routes/projet.route';
+import projectRouter from '@routes/project.route';
 import globalErrorHandler from '@controller/error.controller';
 import technologyRouter from '@routes/technology.route';
 

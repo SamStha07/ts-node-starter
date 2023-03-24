@@ -4,7 +4,11 @@ import { v2 as cloudinary } from 'cloudinary';
 import { NextFunction, Request, Response } from 'express';
 import { UploadedFile } from 'express-fileupload';
 import db from '@lib/db';
-import { IProjectWithDatapacket } from '@type/project.types';
+import {
+  IProject,
+  IProjectWithDatapacket,
+  ITechnologyWithDatapacket,
+} from '@type/project.types';
 import { CustomRequestWithUser } from '@type/user.types';
 import AppError from '@utils/appError';
 import successResponse from '@utils/sucessResponse';
@@ -94,83 +98,44 @@ export const getCurrentUserPojectsList = (
   const { user } = req as CustomRequestWithUser;
 
   db.query(
-    // `SELECT projects.id, projects.name, projects.description, photos.image_url, projects.user_id, projects.created_at FROM projects JOIN photos GROUP BY projects.id HAVING user_id = ?`,
     `SELECT projects.id, projects.name, projects.description, photos.image_url, projects.user_id, projects.created_at FROM projects JOIN photos GROUP BY projects.id HAVING user_id = ?`,
     [user.id],
-    (err, results: IProjectWithDatapacket[]) => {
+    async (err, results: IProjectWithDatapacket[]) => {
       if (err) {
         return next(err);
       }
-      // results = will give given user all projects
 
-      // console.log('results', results);
+      const dataArray: IProject[] = [];
 
-      results.forEach(data =>
+      if (results.length === 0) {
+        return successResponse({
+          res,
+          statusCode: 200,
+          data: [],
+        });
+      }
+
+      results.forEach(data => {
         db.query(
-          `SELECT * FROM technologies INNER JOIN project_tech ON project_id = ? GROUP BY technologies.id`,
+          `SELECT projects.id, technologies.id, technologies.name FROM projects JOIN project_tech ON projects.id = project_tech.project_id JOIN technologies ON technologies.id = project_tech.technology_id HAVING projects.id = ?`,
           [data.id],
-          (err, result) => {
+          (err, result: ITechnologyWithDatapacket[]) => {
             if (err) {
               return next(err);
             }
 
-            console.log('returned result', data?.id, result);
+            dataArray.push({ ...data, technologies: result });
+
+            if (dataArray.length === results.length) {
+              return successResponse({
+                res,
+                statusCode: 200,
+                data: dataArray,
+              });
+            }
           }
-        )
-      );
-
-      // eslint-disable-next-line prefer-const
-      // let mergeResult: any = [];
-
-      // results.forEach(data =>
-      //   db.query(
-      //     `SELECT * FROM project_tech JOIN technologies WHERE project_id = ? GROUP BY technologies.id`,
-      //     [data.id],
-      //     (err, result) => {
-      //       if (err) {
-      //         return next(err);
-      //       }
-      //       // console.log('nestedt result', result, data);
-      //       const mergeResult = { technologies: result, projects: data };
-      //       // console.log('mergeResult', mergeResult);
-
-      //       // mergeResult.push(mergeResult);
-      //     }
-      //   )
-      // );
-
-      // console.log('mergeResult', mergeResult);
-
-      // const { id, name, description, image_url, created_at } = results;
-
-      // return successResponse({
-      //   res,
-      //   statusCode: 200,
-      //   data: results,
-      // });
-
-      // db.query(
-      //   `SELECT technologies.id, technologies.name FROM project_tech JOIN technologies WHERE project_id = ? GROUP BY technologies.id`,
-      //   [id],
-      //   (err, result) => {
-      //     if (err) {
-      //       return next(err);
-      //     }
-
-      //     return successResponse({
-      //       res,
-      //       statusCode: 200,
-      //       data: {
-      //         id,
-      //         name,
-      //         description,
-      //         image_url,
-      //         technology: result,
-      //         created_at,
-      //       },
-      //     });
-      //   }
-      // );
+        );
+      });
     }
   );
 };
