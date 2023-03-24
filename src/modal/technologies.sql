@@ -21,3 +21,12 @@ VALUES (
 -- will remove all the records from the table
 
 DELETE FROM technologies;
+
+SELECT
+    projects.id,
+    technologies.id,
+    technologies.name
+FROM projects
+    JOIN project_tech ON projects.id = project_tech.project_id
+    JOIN technologies ON technologies.id = project_tech.technology_id
+HAVING projects.id = 46;
