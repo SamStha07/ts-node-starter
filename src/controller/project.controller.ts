@@ -23,9 +23,7 @@ export const createProject = async (
 
   const technologyIds = JSON.parse(technology_ids);
 
-  // technologyIds.forEach((id: number) => console.log('id', id.id));
-
-  const image = req.files?.image_url as UploadedFile;
+  const images = req.files?.image_url as UploadedFile[];
 
   if (!user) {
     return next(new AppError('user not found', 404));
@@ -33,59 +31,70 @@ export const createProject = async (
 
   db.query(
     `INSERT INTO projects(name, description, user_id) VALUES ('${name}', '${description}', ${user.id});`,
-    (err, result) => {
+    err => {
       if (err) {
         return next(err);
       }
 
-      if (result) {
-        db.query(
-          'SELECT * FROM projects WHERE name = ?',
-          [name],
-          async (err, results: IProjectWithDatapacket[]) => {
-            if (err) {
-              return next(err);
-            }
-            const { id: project_id } = results[0];
+      db.query(
+        'SELECT * FROM projects WHERE name = ?',
+        [name],
+        async (err, results: IProjectWithDatapacket[]) => {
+          if (err) {
+            return next(err);
+          }
+          const { id: project_id } = results[0];
 
-            technologyIds.forEach(({ id }: { id: number }) =>
+          technologyIds.forEach(({ id }: { id: number }) =>
+            db.query(
+              `INSERT INTO project_tech(project_id, technology_id) VALUES (${project_id}, ${id})`,
+              err => {
+                if (err) {
+                  return next(err);
+                }
+              }
+            )
+          );
+
+          images.forEach(async (image, idx) => {
+            try {
+              const cloudinaryResponse = await cloudinary.uploader.upload(
+                image.tempFilePath,
+                {
+                  folder: 'projects',
+                  resource_type: 'image',
+                }
+              );
+              const secureImagePath = cloudinaryResponse.secure_url;
+
               db.query(
-                `INSERT INTO project_tech(project_id, technology_id) VALUES (${project_id}, ${id})`,
+                `INSERT INTO photos(project_id, image_url) VALUES (${project_id}, '${secureImagePath}')`,
                 err => {
                   if (err) {
                     return next(err);
                   }
-                }
-              )
-            );
 
-            cloudinary.uploader
-              .upload(image.tempFilePath, {
-                folder: 'projects',
-                resource_type: 'image',
-              })
-              .then(response => {
-                const secureImagePath = response.secure_url;
-
-                db.query(
-                  `INSERT INTO photos(project_id, image_url) VALUES (${project_id}, '${secureImagePath}')`,
-                  err => {
-                    if (err) {
-                      return next(err);
-                    }
-
+                  /**
+                   * will the index of forEach and images length
+                   * if idx and images length matches then only send the response otherwise error will thrown as
+                   * ERROR: Cannot set headers after they are sent to client
+                   * above error occurs because we are sending multiple responses from same controller
+                   */
+                  if (idx === images.length - 1) {
                     return successResponse({
                       res,
                       statusCode: 201,
                       msg: 'project created successfully',
                     });
                   }
-                );
-              })
-              .catch(err => next(err));
-          }
-        );
-      }
+                }
+              );
+            } catch (err) {
+              return next(err);
+            }
+          });
+        }
+      );
     }
   );
 };
@@ -96,11 +105,10 @@ export const getCurrentUserPojectsList = (
   next: NextFunction
 ) => {
   const { user } = req as CustomRequestWithUser;
-
   db.query(
-    `SELECT projects.id, projects.name, projects.description, photos.image_url, projects.user_id, projects.created_at FROM projects JOIN photos GROUP BY projects.id HAVING user_id = ?`,
+    `SELECT * FROM projects WHERE user_id = ?`,
     [user.id],
-    async (err, results: IProjectWithDatapacket[]) => {
+    (err, results: IProjectWithDatapacket[]) => {
       if (err) {
         return next(err);
       }
@@ -117,22 +125,36 @@ export const getCurrentUserPojectsList = (
 
       results.forEach(data => {
         db.query(
-          `SELECT projects.id, technologies.id, technologies.name FROM projects JOIN project_tech ON projects.id = project_tech.project_id JOIN technologies ON technologies.id = project_tech.technology_id HAVING projects.id = ?`,
+          `SELECT id, image_url FROM photos WHERE project_id = ?`,
           [data.id],
-          (err, result: ITechnologyWithDatapacket[]) => {
+          (err, photoResults) => {
             if (err) {
               return next(err);
             }
 
-            dataArray.push({ ...data, technologies: result });
+            db.query(
+              `SELECT projects.id, technologies.id, technologies.name FROM projects JOIN project_tech ON projects.id = project_tech.project_id JOIN technologies ON technologies.id = project_tech.technology_id HAVING projects.id = ?`,
+              [data.id],
+              (err, result: ITechnologyWithDatapacket[]) => {
+                if (err) {
+                  return next(err);
+                }
 
-            if (dataArray.length === results.length) {
-              return successResponse({
-                res,
-                statusCode: 200,
-                data: dataArray,
-              });
-            }
+                dataArray.push({
+                  ...data,
+                  photos: photoResults,
+                  technologies: result,
+                });
+
+                if (dataArray.length === results.length) {
+                  return successResponse({
+                    res,
+                    statusCode: 200,
+                    data: dataArray,
+                  });
+                }
+              }
+            );
           }
         );
       });

@@ -39,3 +39,21 @@ export const createTechnology = async (
     })
     .catch(err => next(err));
 };
+
+export const getAllTechnology = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  db.query(`SELECT * FROM technologies;`, (err, result) => {
+    if (err) {
+      return next(err);
+    }
+
+    return successResponse({
+      res,
+      statusCode: 201,
+      data: result,
+    });
+  });
+};

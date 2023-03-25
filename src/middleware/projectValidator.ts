@@ -11,6 +11,7 @@ const dataSchema = z.object({
   description: z.string({
     required_error: 'Description is required',
   }),
+
   image_url: z
     .object({
       mimetype: z.string().nonempty(),
@@ -19,8 +20,9 @@ const dataSchema = z.object({
     .refine(file => file?.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
     .refine(
       file => ACCEPTED_IMAGE_TYPES.includes(file?.mimetype),
-      '.jpg, .jpeg, .png and .webp files are accepted.'
-    ),
+      '.jpg, .jpeg, .png, .webp and .svg files are accepted.'
+    )
+    .array(),
 });
 
 const validate =
@@ -28,7 +30,7 @@ const validate =
   async (req: Request, res: Response, next: NextFunction) => {
     const { name, description } = req.body;
 
-    const image_url = req.files?.image_url as UploadedFile;
+    const image_url = req.files?.image_url as UploadedFile[];
 
     try {
       await schema.parseAsync({
